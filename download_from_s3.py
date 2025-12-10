@@ -1,90 +1,103 @@
 import os
 import sys
+import json
 import boto3
-from datetime import datetime, timedelta
 from pathlib import Path
 
-# --- AWS S3 Configuration ---
 BUCKET_NAME = "duploservices-ct-agskore-901907124952"
-s3_client = boto3.client("s3")  # Uses IAM / Instance credentials automatically
+s3 = boto3.client("s3")
+
+CONFIG_FILE = "models.json"
+
+# --- ROOT BASE PATH (generic for all OS) ---
+ROOT_FOLDER = Path.home() / "ml-models"      # example: C:\Users\User\.ml-models
+ROOT_FOLDER.mkdir(exist_ok=True)
 
 
-def get_default_download_folder():
-    """Return user's default Downloads directory."""
-    home = Path.home()
-    download_dir = home / "Downloads"
-    download_dir.mkdir(parents=True, exist_ok=True)
-    return str(download_dir)
+def load_config():
+    """Load model configuration from models.json"""
+    if not os.path.exists(CONFIG_FILE):
+        print(f"❌ Config file not found: {CONFIG_FILE}")
+        sys.exit(1)
+
+    with open(CONFIG_FILE, "r") as f:
+        return json.load(f)["model_config_list"]
 
 
-def find_latest_available_date(bucket, commodity_name, max_days=7):
+def sanitize_base_path(raw_path):
     """
-    Check S3 for available folders up to `max_days` back.
-    Returns (date_str, prefix) if found, else (None, None)
+    Ensure base_path NEVER duplicates ml-models folder.
     """
-    for i in range(max_days):
-        date = datetime.now() - timedelta(days=i)
-        date_str = date.strftime("%d-%m-%Y")
-        prefix = f"models/{date_str}/{commodity_name}/"
+    clean = raw_path.lstrip("/")
 
-        response = s3_client.list_objects_v2(Bucket=bucket, Prefix=prefix, MaxKeys=1)
-        if "Contents" in response:
-            return date_str, prefix
+    # Remove leading ml-models/
+    if clean.startswith("ml-models/"):
+        clean = clean.replace("ml-models/", "", 1)
 
-    return None, None
+    return clean
 
 
-def download_commodity_from_s3(commodity_name):
-    """Download all model files for a given commodity (auto fallback to past days)."""
-    date_str, prefix = find_latest_available_date(BUCKET_NAME, commodity_name)
+def download_s3_folder(bucket, prefix, local_dir):
+    """Download S3 folder recursively."""
+    paginator = s3.get_paginator("list_objects_v2")
 
-    if not date_str:
-        print(f"❌ No models found for '{commodity_name}' in the last 7 days.\n")
-        return
+    for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+        for obj in page.get("Contents", []):
+            key = obj["Key"]
 
-    print(f"\n📦 Found latest models for {commodity_name} on {date_str}")
-    print(f"📦 Downloading from s3://{BUCKET_NAME}/{prefix}")
-
-    try:
-        response = s3_client.list_objects_v2(Bucket=BUCKET_NAME, Prefix=prefix)
-
-        # ✅ Confirm actual files exist
-        if "Contents" not in response or len(response["Contents"]) == 0:
-            print(f"⚠️ No downloadable files found for {commodity_name}.\n")
-            return
-
-        # Only create local folder once files are confirmed
-        local_download_dir = os.path.join(
-            get_default_download_folder(), "models", date_str, commodity_name
-        )
-        os.makedirs(local_download_dir, exist_ok=True)
-
-        print(f"📁 Saving to: {local_download_dir}\n")
-
-        for obj in response["Contents"]:
-            s3_key = obj["Key"]
-            file_name = os.path.basename(s3_key)
-            if not file_name:
+            if key.endswith("/"):
                 continue
 
-            local_path = os.path.join(local_download_dir, file_name)
-            s3_client.download_file(BUCKET_NAME, s3_key, local_path)
-            print(f"✅ Downloaded: {file_name}")
+            rel_path = key[len(prefix):]
+            local_path = os.path.join(local_dir, rel_path)
 
-        print(f"\n🎯 Completed download for {commodity_name} ({date_str}).\n")
+            os.makedirs(os.path.dirname(local_path), exist_ok=True)
 
-    except Exception as e:
-        print(f"❌ Error downloading {commodity_name}: {e}")
+            if os.path.exists(local_path):
+                print(f"⏩ Skipping (exists): {rel_path}")
+                continue
+
+            s3.download_file(bucket, key, local_path)
+            print(f"✔ Downloaded: {rel_path}")
+
+
+def download_for_commodity(commodity, config):
+    """Download all model folders for a given commodity."""
+    models = [m for m in config if m["commodity"].lower() == commodity.lower()]
+
+    if not models:
+        print(f"❌ No models found for commodity: {commodity}")
+        return
+
+    print(f"\n📦 Found {len(models)} model(s) for: {commodity}")
+
+    for model in models:
+        model_name = model["name"]
+        base_path = sanitize_base_path(model["base_path"])
+
+        # S3 path
+        s3_prefix = f"model_store/{commodity.lower()}/{model_name}/"
+
+        # Local path → ~/.ml-models/<base_path>/<model_name>
+        local_path = ROOT_FOLDER / base_path / model_name
+        os.makedirs(local_path, exist_ok=True)
+
+        print(f"\n📥 Downloading model: {model_name}")
+        print(f"🔹 S3 : s3://{BUCKET_NAME}/{s3_prefix}")
+        print(f"🔹 Local: {local_path}")
+
+        download_s3_folder(BUCKET_NAME, s3_prefix, local_path)
+
+    print(f"\n🎉 Completed: {commodity}\n")
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("⚠️ Please provide one or more commodity names.\nExample:")
-        print("   python download_from_s3.py Almonds Cashew Blueberry")
+        print("Usage:\n  python download_models.py Almonds\n")
         sys.exit(1)
 
     commodities = sys.argv[1:]
-    print(f"🧺 Downloading models for: {', '.join(commodities)}\n")
+    config = load_config()
 
     for commodity in commodities:
-        download_commodity_from_s3(commodity)
+        download_for_commodity(commodity, config)

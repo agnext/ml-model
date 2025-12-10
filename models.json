@@ -1,0 +1,84 @@
+{
+  "model_config_list": [
+    {
+      "name": "classification_model",
+      "base_path": "ml-models/strawberry",
+      "s3_path": "https://duploservices-ct-agskore-901907124952.s3.us-west-2.amazonaws.com/model_store/strawberry/classification_model/58/saved_model.pb",
+      "commodity": "strawberry",
+      "task": "classification",
+      "version": 58
+    },
+    {
+      "name": "cashew_segmentation_mrcnn_model",
+      "base_path": "ml-models/cashew",
+      "s3_path": "https://duploservices-ct-agskore-901907124952.s3.us-west-2.amazonaws.com/model_store/strawberry/classification_model/58/saved_model.pb",
+      "commodity": "cashew",
+      "task": "segmentation",
+      "version": 6
+    },
+    {
+      "name": "cashew_defect_model_caronut",
+      "base_path": "ml-models/cashew",
+      "s3_path": "https://duploservices-ct-agskore-901907124952.s3.us-west-2.amazonaws.com/model_store/cashew/cashew_defect_model_caronut/6/saved_model.pb",
+      "commodity": "cashew",
+      "task": "classification",
+      "version": 6
+    },
+    {
+      "name": "blueberry_segmentation_mrcnn_model",
+      "base_path": "ml-models/blueberry",
+      "s3_path": "https://duploservices-ct-agskore-901907124952.s3.us-west-2.amazonaws.com/model_store/blueberry/blueberry_segmentation_mrcnn_model/1/saved_model.pb",
+      "commodity": "blueberry",
+      "task": "segmentation",
+      "version": 1
+    },
+    {
+      "name": "EffnetB4_blueberry_Nov_2_V1.0.4",
+      "base_path": "ml-models/blueberry",
+      "commodity": "blueberry",
+      "s3_path": "https://duploservices-ct-agskore-901907124952.s3.us-west-2.amazonaws.com/model_store/blueberry/EffnetB4_blueberry_Nov_2_V1.0.4/334/saved_model.pb",
+      "task": "classification",
+      "version": 334
+    },
+    {
+      "name": "blueberry_inceptionV3+spatial_6cls_7july",
+      "base_path": "ml-models/blueberry",
+      "s3_path": "https://duploservices-ct-agskore-901907124952.s3.us-west-2.amazonaws.com/model_store/blueberry/blueberry_inceptionV3%2Bspatial_6cls_7july/1/saved_model.pb",
+      "commodity": "blueberry",
+      "task": "classification",
+      "version": 1
+    },
+    {
+      "name": "almond_segmentation_mrcnn_model",
+      "base_path": "ml-models/almonds",
+      "s3_path": "https://duploservices-ct-agskore-901907124952.s3.us-west-2.amazonaws.com/model_store/almonds/almond_segmentation_mrcnn_model/212/saved_model.pb",
+      "commodity": "almonds",
+      "task": "segmentation",
+      "version": 212
+    },
+    {
+      "name": "unified_model",
+      "base_path": "ml-models/almonds",
+      "s3_path": "https://duploservices-ct-agskore-901907124952.s3.us-west-2.amazonaws.com/model_store/almonds/unified_model/2/saved_model.pb",
+      "commodity": "almonds",
+      "task": "classification",
+      "version": 2
+    },
+    {
+      "name": "bluediamond_variety_model",
+      "base_path": "ml-models/almonds",
+      "s3_path": "https://duploservices-ct-agskore-901907124952.s3.us-west-2.amazonaws.com/model_store/almonds/bluediamond_variety_model/35/saved_model.pb",
+      "commodity": "almonds",
+      "task": "classification",
+      "version": 35
+    },
+    {
+      "name": "bluediamond_base_model",
+      "base_path": "ml-models/almonds",
+      "s3_path": "https://duploservices-ct-agskore-901907124952.s3.us-west-2.amazonaws.com/model_store/almonds/bluediamond_base_model/11/saved_model.pb",
+      "commodity": "almonds",
+      "task": "classification",
+      "version": 11
+    }
+  ]
+}
