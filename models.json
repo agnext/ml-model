@@ -9,9 +9,17 @@
       "version": 58
     },
     {
+      "name": "unet_model_segmentation",
+      "base_path": "ml-models/strawberry",
+      "s3_path": "https://duploservices-ct-agskore-901907124952.s3.us-west-2.amazonaws.com/model_store/strawberry/unet_model_segmentation/57/saved_model.pb",
+      "commodity": "strawberry",
+      "task": "segmentation",
+      "version": 57
+    },
+    {
       "name": "cashew_segmentation_mrcnn_model",
       "base_path": "ml-models/cashew",
-      "s3_path": "https://duploservices-ct-agskore-901907124952.s3.us-west-2.amazonaws.com/model_store/strawberry/classification_model/58/saved_model.pb",
+      "s3_path": "https://duploservices-ct-agskore-901907124952.s3.us-west-2.amazonaws.com/model_store/cashew/cashew_segmentation_mrcnn_model/6/saved_model.pb",
       "commodity": "cashew",
       "task": "segmentation",
       "version": 6
@@ -47,6 +55,14 @@
       "commodity": "blueberry",
       "task": "classification",
       "version": 1
+    },
+    {
+      "name": "wishfarmAllVarietyDataBank",
+      "base_path": "ml-models/blueberry",
+      "s3_path": "https://duploservices-ct-agskore-901907124952.s3.us-west-2.amazonaws.com/model_store/blueberry/wishfarmAllVarietyDataBank/2/saved_model.pb",
+      "commodity": "blueberry",
+      "task": "classification",
+      "version": 2
     },
     {
       "name": "almond_segmentation_mrcnn_model",
@@ -110,7 +126,7 @@
       "s3_path": "https://duploservices-ct-agskore-901907124952.s3.us-west-2.amazonaws.com/model_store/blueberry/wishfarm_model_sep29/1/saved_model.pb",
       "commodity": "blueberry",
       "task": "classification",
-      "version": 11
+      "version": 1
     },
     {
       "name": "agrovisionAllVarietyDataBank",
@@ -118,7 +134,7 @@
       "s3_path": " https://duploservices-ct-agskore-901907124952.s3.us-west-2.amazonaws.com/model_store/blueberry/agrovision_base_model_25_apr_2025/334/saved_model.pb",
       "commodity": "blueberry",
       "task": "classification",
-      "version": 11
+      "version": 334
     },
     {
       "name": "grimmway_babycarrot_defect_model",
@@ -129,13 +145,28 @@
       "version": 80
     },
     {
+      "name": "babycarrot_segmentation_mrcnn_model",
+      "base_path": "ml-models/babycarrot",
+      "s3_path": " https://duploservices-ct-agskore-901907124952.s3.us-west-2.amazonaws.com/model_store/babycarrot/babycarrot_segmentation_mrcnn_model/313/saved_model.pb",
+      "commodity": "babycarrot",
+      "task": "segmentation",
+      "version": 313
+    },
+    {
       "name": "caronutMacadamia",
       "base_path": "ml-models/macadamia",
       "s3_path": " https://duploservices-ct-agskore-901907124952.s3.us-west-2.amazonaws.com/model_store/macadamia/caronut_base_model_30_May_2025/1/saved_model.pb",
       "commodity": "macadamia",
       "task": "classification",
       "version": 1
+    },
+    {
+      "name": "macadamia_segmentation_mrcnn_model",
+      "base_path": "ml-models/macadamia",
+      "s3_path": " https://duploservices-ct-agskore-901907124952.s3.us-west-2.amazonaws.com/model_store/macadamia/macadamia_segmentation_mrcnn_model/1/saved_model.pb",
+      "commodity": "macadamia",
+      "task": "segmentation",
+      "version": 1
     }
-    
   ]
 }

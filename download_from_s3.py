@@ -9,14 +9,59 @@ s3 = boto3.client("s3")
 
 CONFIG_FILE = "models.json"
 
-# --- ROOT BASE PATH (generic for all OS) ---
-ROOT_FOLDER = Path.home() / "ml-models"      # example: C:\Users\User\.ml-models
-ROOT_FOLDER.mkdir(exist_ok=True)
 
+# ================= ROOT FOLDER RESOLUTION =================
+
+def find_ml_models_root():
+   
+
+    # 1️⃣ ENV override (recommended for prod)
+    env_root = os.environ.get("ML_MODELS_ROOT")
+    if env_root:
+        path = Path(env_root).expanduser().resolve()
+        path.mkdir(parents=True, exist_ok=True)
+        print(f"📁 Using ML_MODELS_ROOT from env: {path}")
+        return path
+
+    candidates = []
+
+    if os.name == "nt":  # Windows
+        drives = [
+            f"{chr(d)}:\\" for d in range(67, 91)
+            if os.path.exists(f"{chr(d)}:\\")
+        ]
+        for drive in drives:
+            candidates.append(Path(drive) / "ml-models")
+    else:  # Linux / macOS
+        candidates.extend([
+            Path("/data/ml-models"),
+            Path("/opt/ml-models"),
+            Path("/mnt/ml-models"),
+            Path("/srv/ml-models"),
+            Path.home() / "ml-models"
+        ])
+
+    for path in candidates:
+        if path.exists() and path.is_dir():
+            print(f"📁 Found existing ml-models directory: {path}")
+            return path.resolve()
+
+    # 3️⃣ Fallback
+    fallback = Path.home() / "ml-models"
+    fallback.mkdir(parents=True, exist_ok=True)
+    print(f"📁 Created fallback ml-models directory: {fallback}")
+    return fallback.resolve()
+
+
+# ✅ ROOT BASE PATH (NOW SAFE)
+ROOT_FOLDER = find_ml_models_root()
+
+
+# ================= CONFIG =================
 
 def load_config():
     """Load model configuration from models.json"""
-    if not os.path.exists(CONFIG_FILE):
+    if not Path(CONFIG_FILE).exists():
         print(f"❌ Config file not found: {CONFIG_FILE}")
         sys.exit(1)
 
@@ -24,20 +69,19 @@ def load_config():
         return json.load(f)["model_config_list"]
 
 
-def sanitize_base_path(raw_path):
-    """
-    Ensure base_path NEVER duplicates ml-models folder.
-    """
+def sanitize_base_path(raw_path: str) -> str:
+    """Ensure base_path NEVER duplicates ml-models folder."""
     clean = raw_path.lstrip("/")
 
-    # Remove leading ml-models/
     if clean.startswith("ml-models/"):
         clean = clean.replace("ml-models/", "", 1)
 
     return clean
 
 
-def download_s3_folder(bucket, prefix, local_dir):
+# ================= S3 DOWNLOAD =================
+
+def download_s3_folder(bucket, prefix, local_dir: Path):
     """Download S3 folder recursively."""
     paginator = s3.get_paginator("list_objects_v2")
 
@@ -49,15 +93,14 @@ def download_s3_folder(bucket, prefix, local_dir):
                 continue
 
             rel_path = key[len(prefix):]
-            local_path = os.path.join(local_dir, rel_path)
+            local_path = local_dir / rel_path
+            local_path.parent.mkdir(parents=True, exist_ok=True)
 
-            os.makedirs(os.path.dirname(local_path), exist_ok=True)
-
-            if os.path.exists(local_path):
+            if local_path.exists():
                 print(f"⏩ Skipping (exists): {rel_path}")
                 continue
 
-            s3.download_file(bucket, key, local_path)
+            s3.download_file(bucket, key, str(local_path))
             print(f"✔ Downloaded: {rel_path}")
 
 
@@ -75,21 +118,20 @@ def download_for_commodity(commodity, config):
         model_name = model["name"]
         base_path = sanitize_base_path(model["base_path"])
 
-        # S3 path
         s3_prefix = f"model_store/{commodity.lower()}/{model_name}/"
-
-        # Local path → ~/.ml-models/<base_path>/<model_name>
         local_path = ROOT_FOLDER / base_path / model_name
-        os.makedirs(local_path, exist_ok=True)
+        local_path.mkdir(parents=True, exist_ok=True)
 
         print(f"\n📥 Downloading model: {model_name}")
-        print(f"🔹 S3 : s3://{BUCKET_NAME}/{s3_prefix}")
-        print(f"🔹 Local: {local_path}")
+        print(f"🔹 S3    : s3://{BUCKET_NAME}/{s3_prefix}")
+        print(f"🔹 Local : {local_path}")
 
         download_s3_folder(BUCKET_NAME, s3_prefix, local_path)
 
     print(f"\n🎉 Completed: {commodity}\n")
 
+
+# ================= MAIN =================
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
